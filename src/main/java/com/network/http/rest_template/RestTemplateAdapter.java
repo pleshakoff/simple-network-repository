@@ -3,6 +3,7 @@ package com.network.http.rest_template;
 import com.network.Service;
 import com.network.ServicesProps;
 import com.network.http.Http;
+import com.network.http.HttpException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,7 +63,7 @@ public class RestTemplateAdapter implements Http {
         }
         else
         {
-            throw new RuntimeException("Remote call error");
+            throw new HttpException("Remote call error",responseEntity.getStatusCode());
         }
     }
 
