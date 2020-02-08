@@ -1,5 +1,6 @@
 package com.network.http.rest_template;
 
+import com.network.http.HttpException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
@@ -33,7 +34,7 @@ public class RestTemplateResponseErrorHandler
     @Override
     public void handleError(URI url, HttpMethod method, ClientHttpResponse httpResponse) throws IOException {
       HttpStatus statusCode = HttpStatus.resolve(httpResponse.getRawStatusCode());
-      throw new RuntimeException(String.format("Remote procedure call error. Status code %s For %s %s",statusCode,method,url));
+      throw new HttpException("Remote procedure call error",statusCode,method,url);
 
     }
 }
