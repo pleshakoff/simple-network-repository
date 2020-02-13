@@ -7,6 +7,7 @@ import com.network.http.HttpException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
@@ -36,7 +37,7 @@ public class RestTemplateAdapter implements Http {
 
 
 
-    @Override
+     @Override
      public  <T,B> ResponseEntity<T> call(String serviceName,
                                           HttpMethod method,
                                           Class<T> responseType,
@@ -46,6 +47,35 @@ public class RestTemplateAdapter implements Http {
                                           String... pathSegments
      )
      {
+       return call(serviceName,method,responseType,null,false,body,additionalHeaders,queryParams,pathSegments);
+      }
+
+    @Override
+    public  <T,B> ResponseEntity<T> call(String serviceName,
+                                         HttpMethod method,
+                                         ParameterizedTypeReference<T> responseTypeList,
+                                         @Nullable B body,
+                                         Map<String, String> additionalHeaders,
+                                         MultiValueMap<String, String> queryParams,
+                                         String... pathSegments
+    )
+    {
+        return call(serviceName,method,null,responseTypeList,true,body,additionalHeaders,queryParams,pathSegments);
+
+    }
+
+
+    private  <T,B> ResponseEntity<T> call(String serviceName,
+                                         HttpMethod method,
+                                         Class<T> responseType,
+                                         ParameterizedTypeReference<T> responseTypeList,
+                                         boolean isList,
+                                         @Nullable B body,
+                                         Map<String, String> additionalHeaders,
+                                         MultiValueMap<String, String> queryParams,
+                                         String... pathSegments
+    )
+    {
         URI uri = getUriBuilder(serviceName).queryParams(queryParams).pathSegment(pathSegments).build().toUri();
 
 
@@ -57,7 +87,14 @@ public class RestTemplateAdapter implements Http {
 
         HttpEntity<B> httpEntity = new HttpEntity<>(body, httpHeaders);
         log.info("Call {}",uri.toString());
-        ResponseEntity<T> responseEntity= restTemplate.exchange(uri,method,httpEntity,responseType);
+
+        ResponseEntity<T> responseEntity;
+        if (isList) {
+            responseEntity = restTemplate.exchange(uri, method, httpEntity, responseTypeList);
+        }
+        else
+         responseEntity = restTemplate.exchange(uri, method, httpEntity, responseType);
+
         if (responseEntity.getStatusCode()== HttpStatus.OK) {
             return responseEntity;
         }
@@ -66,5 +103,10 @@ public class RestTemplateAdapter implements Http {
             throw new HttpException("Remote call error",responseEntity.getStatusCode());
         }
     }
+
+
+
+
+
 
 }
